@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paint.Js</title>
+    <style>
+      *,
+      *::after,
+      *::before {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #222;
+        padding: 16px;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: #fce300;
+        font-size: 12px;
+        font-weight: 600;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+
+        img {
+          width: 16px;
+          height: auto;
+        }
+      }
+
+      canvas {
+        background: #fff;
+      }
+
+      header {
+        background: #c0c0c0;
+        padding: 2px;
+        grid-area: header;
+
+        button {
+          border: 0;
+          background: transparent;
+
+          &:hover {
+            box-shadow: 1px 1px black, inset -1px -1px gray, inset 1px 1px white;
+          }
+        }
+      }
+
+      footer {
+        background: silver;
+        padding: 4px;
+        grid-area: footer;
+      }
+
+      #container {
+        border: 1px solid #808080;
+        /* grid template areas */
+        display: grid;
+        grid-template-areas:
+          "header header header"
+          "aside main main"
+          "footer footer footer";
+      }
+
+      main {
+        padding: 16px;
+        grid-area: main;
+      }
+
+      aside {
+        background: silver;
+        width: 52px;
+        padding-top: 2px;
+        grid-area: aside;
+
+        nav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1px;
+        }
+
+        button {
+          width: 24px;
+          height: 24px;
+
+          background: #bdbdbd url("./icons/draw.png") no-repeat center;
+
+          border: 2px solid #eee;
+          border-right-color: #000;
+          border-bottom-color: #000;
+
+          /* para que la imagen quede bien aunque se aplique un zoom */
+          image-rendering: pixelated;
+
+          &.active {
+            background-color: #eee;
+            border-color: #000;
+            border-right-color: #eee;
+            border-bottom-color: #eee;
+          }
+        }
+      }
+
+      /* iconos */
+      #erased-btn {
+        background-image: url("./icons/erase.png");
+      }
+      #rectangle-btn {
+        background-image: url("./icons/rectangle.png");
+      }
+      #ellipse-btn {
+        background-image: url("./icons/ellipse.png");
+      }
+      #picker-btn {
+        background-image: url("./icons/picker.png");
+      }
+      #clear-btn {
+        background-image: url("./icons/trashPixel.png");
+        background-size: 20px;
+      }
+    </style>
+    <script type="module">
+      //para poder ocupar los import y export //renderiza/evalua hasta que todos los elementos existan
+
+      //CONSTANTS
+      const MODES = {
+        DRAW: "draw",
+        ERASE: "erase",
+        RECTANGLE: "rectangle",
+        ELLIPSE: "ellipse",
+        PICKER: "picker",
+      };
+
+      //UTILITIES
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => document.querySelectorAll(selector);
+
+      //ELEMENTS -> recuperenado elementos
+      const $canvas = $("#canvas"); // identifica que elementos son los que tienen el ID canvas, como si fuera un querySelector
+      const $colorPicker = $("#color-picker"); //Esuchamos el elemento que nos permite seleccionar el color
+      const $clearBtn = $("#clear-btn");
+      const $drawBtn = $("#draw-btn");
+      const $rectangleBtn = $("#rectangle-btn");
+
+      let contexto = $canvas.getContext("2d"); //recuperamos el contexto del canvas
+
+      //STATE
+      let isDrawing = false;
+      let startX, startY;
+      let lastX = 0;
+      let lastY = 0;
+      let mode = MODES.DRAW;
+
+      //EVENTS
+      //escuchar cuando el mause haga click
+      $canvas.addEventListener("mousedown", startDrawing);
+      $canvas.addEventListener("mousemove", draw);
+      $canvas.addEventListener("mouseup", stopDrawing);
+      $canvas.addEventListener("mouseleave", stopDrawing);
+      $clearBtn.addEventListener("click", clearCanvas);
+
+      $drawBtn.addEventListener("click", () => {
+        setMode(MODES.DRAW);
+      });
+      $rectangleBtn.addEventListener("click", () => {
+        setMode(MODES.RECTANGLE);
+      });
+
+      //escuchar color-picker cada que cambie
+      $colorPicker.addEventListener("change", hadleColorChange);
+
+      //METHODS
+      function startDrawing(event) {
+        isDrawing = true;
+        console.log(event);
+
+        //desestructurar coordenadas del evento
+        const { offsetX, offsetY } = event;
+
+        //guardar las coordenas en las variables
+        //se coloca punto y coma porque estamos iniciando la linea con corchetes
+        [startX, startY] = [offsetX, offsetY];
+        [lastX, lastY] = [offsetX, offsetY];
+      }
+
+      function draw(event) {
+        //comenzamos a dibujar cuando existe un clic en el canvas
+        if (!isDrawing) return;
+
+        //recuperamos posicion del click
+        const { offsetX, offsetY } = event;
+
+        if (mode === MODES.DRAW) {
+          //comenzamos  con el trazo
+          contexto.beginPath();
+
+          //movemos a las coordenadas donde comienza
+          contexto.moveTo(lastX, lastY);
+
+          //dibuja una linea entre las coordenadas actuales y las nuevas
+          contexto.lineTo(offsetX, offsetY);
+
+          //dibujamos el trazo
+          contexto.stroke();
+
+          //actualizamos las coordenadas
+          [lastX, lastY] = [offsetX, offsetY];
+
+          return;
+        }
+
+        if (mode === MODES.RECTANGLE) {
+          //recuperar ancho y alto rectangulo
+          //startX - cordenada inicial click
+          //offsetX - donde esta el mouse
+          const width = offsetX - startX;
+          const height = offsetY - startY;
+
+          contexto.beginPath();
+          contexto.rect(startX, startY, width, height);
+          contexto.stroke();
+
+          
+          return;
+        }
+      }
+
+      function stopDrawing(event) {
+        isDrawing = false;
+      }
+
+      function hadleColorChange() {
+        const { value } = $colorPicker;
+        // console.log(value);
+        contexto.strokeStyle = value;
+      }
+
+      function clearCanvas() {
+        // dibujamos un rectangulo y lo limpiamos
+        // setteamos valores de inicio en 0 y pasamos el ancho y alto del canvas
+        contexto.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function setMode(newMode) {
+        //pasamos el nuevo mode y lo guardamos en el estado
+        mode = newMode; // act nuestro nuevo modo
+
+        //recuperamos y limpiamos elemento btn que tengan la clase active
+        $("button.active")?.classList.remove("active");
+
+        //colocamos la clase active en el btn que tenga el nuevo modo
+        if (mode === MODES.DRAW) {
+          $drawBtn.classList.add("active");
+          canvas.style.cursor = "crosshair";
+          contexto.lineWidth = 2;
+          return;
+        }
+
+        if (mode === MODES.RECTANGLE) {
+          $rectangleBtn.classList.add("active");
+          canvas.style.cursor = "nw-resize";
+          contexto.lineWidth = 2;
+          return;
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <h1><img src="./icon.png" alt="Paint" /> Paint.js</h1>
+    <div id="container">
+      <header>
+        <button>File</button>
+        <button>Edit</button>
+        <button>View</button>
+        <button>Image</button>
+        <button>Option</button>
+        <button>Help</button>
+      </header>
+
+      <aside>
+        <nav>
+          <button class="active" id="draw-btn" title="Pincel"></button>
+          <button id="erased-btn" title="Borrar"></button>
+          <button id="rectangle-btn" title="Rectángulo"></button>
+          <button id="ellipse-btn" title="Elipse"></button>
+          <button id="picker-btn" title="Seleccionar"></button>
+          <button id="clear-btn" title="Limpiar dibujo"></button>
+        </nav>
+      </aside>
+      <main>
+        <canvas id="canvas" width="300" height="200"></canvas>
+      </main>
+
+      <footer>
+        <input type="color" id="color-picker" value="#000000" />
+      </footer>
+    </div>
+  </body>
+</html>
