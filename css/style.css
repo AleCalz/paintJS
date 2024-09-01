@@ -8,13 +8,14 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   background: #222;
   padding: 16px;
-  max-width: 500px;
+  max-width: 1280px;
   margin: 0 auto;
+  border: 1px solid #808080;
 }
 
 h1 {
   color: #fce300;
-  font-size: 12px;
+  font-size: 30px;
   font-weight: 600;
 
   display: flex;
@@ -23,7 +24,7 @@ h1 {
   gap: 4px;
 
   img {
-    width: 16px;
+    width: 30px;
     height: auto;
   }
 }
@@ -36,8 +37,11 @@ header {
   background: #c0c0c0;
   padding: 2px;
   grid-area: header;
+  height: 3rem;
 
   button {
+    height: 100%;
+    font-size: larger;
     border: 0;
     background: transparent;
 
@@ -49,13 +53,13 @@ header {
 
 footer {
   background: silver;
-  padding: 4px;
+  padding: 10px;
   grid-area: footer;
+  height: 3rem;
 }
 
 #container {
   border: 1px solid #808080;
-  /* grid template areas */
   display: grid;
   grid-template-areas:
     "header header header"
@@ -70,8 +74,8 @@ main {
 
 aside {
   background: silver;
-  width: 52px;
-  padding-top: 2px;
+  width: 80px;
+  padding: 4px;
   grid-area: aside;
 
   nav {
@@ -81,8 +85,8 @@ aside {
   }
 
   button {
-    width: 24px;
-    height: 24px;
+    width: 34px;
+    height: 34px;
 
     background: #bdbdbd url("../icons/draw.png") no-repeat center;
 
